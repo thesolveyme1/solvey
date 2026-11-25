@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Solvey — Fifth Year</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="roast.css">
+    <script>
+        (function () {
+            try {
+                var saved = localStorage.getItem("thegreatasm_theme");
+                if (saved === "dark" || saved === "night") saved = "charcoal";
+                if (saved === "day") saved = "light";
+                var valid = saved === "light" || saved === "charcoal" || saved === "black" || saved === "navy";
+                var theme = valid ? saved : (window.matchMedia && window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "charcoal");
+                document.documentElement.setAttribute("data-theme", theme);
+            } catch (_) {
+                document.documentElement.setAttribute("data-theme", "charcoal");
+            }
+        })();
+    </script>
+</head>
+<body>
+    <div class="desk-shell" id="app-shell">
+        <!-- Main Top Nav (56px) -->
+        <header class="topbar" id="main-topbar">
+            <div class="brand-wrap">
+                <button type="button" class="topbar-title" id="brand-home-btn">Solvey</button>
+            </div>
+
+            <nav class="main-nav" aria-label="Study sections" id="main-nav">
+                <button type="button" class="text-link is-active" data-nav="home">Subjects</button>
+                <button type="button" class="text-link" data-nav="mistakes">Mistakes</button>
+                <button type="button" class="text-link" data-nav="favorites">Favorites</button>
+                <button type="button" class="text-link" data-nav="history">History</button>
+                <button type="button" class="text-link" data-nav="stats">Stats</button>
+            </nav>
+
+            <div class="topbar-actions">
+                <label class="sr-only" for="theme-select">Color theme</label>
+                <select id="theme-select" class="theme-select" aria-label="Color theme">
+                    <option value="light">Light</option>
+                    <option value="charcoal">Charcoal</option>
+                    <option value="black">Black</option>
+                    <option value="navy">Dark blue</option>
+                </select>
+                <button type="button" class="text-link is-accent" id="topbar-signin-btn">Sign in with Google</button>
+                <span class="text-link" id="topbar-user-label" style="display: none; cursor: default;"></span>
+                <button type="button" class="text-link" id="topbar-signout-btn" style="display: none;">Sign out</button>
+            </div>
+        </header>
+
+        <!-- Auth & Setup Notice -->
+        <section class="quiet-panel" id="firebase-setup-panel" style="display: none;">
+            <h2>Connect Firebase project: solvey-4cc26</h2>
+            <p>
+                Paste the Web App config snippet from
+                <a href="https://console.firebase.google.com/u/2/project/solvey-4cc26/settings/general" target="_blank" rel="noopener">Firebase Console</a>
+                to enable Google Sign-In and cloud sync.
+            </p>
+            <div class="field-grid">
+                <div>
+                    <label class="field-label" for="cfg-raw-input">firebaseConfig snippet</label>
+                    <textarea id="cfg-raw-input" class="flat-textarea" rows="3" placeholder='apiKey: "...", authDomain: "solvey-4cc26.firebaseapp.com", projectId: "solvey-4cc26", appId: "..."'></textarea>
+                </div>
+            </div>
+            <div style="display: flex; align-items: center; gap: 16px;">
+                <button type="button" class="flat-btn is-primary" id="save-cfg-btn">Save configuration</button>
+                <button type="button" class="text-link" id="dismiss-cfg-btn">Hide</button>
+            </div>
+            <div class="status-note" id="cfg-status"></div>
+        </section>
+
+        <section class="quiet-panel" id="auth-prompt-panel" style="display: none;">
+            <h2>Sign in with Google to sync sessions</h2>
+            <p>Your solved history, mistakes, bookmarks, personal notes, and presets stay synced across devices.</p>
+            <div style="display: flex; align-items: center; gap: 16px; flex-wrap: wrap;">
+                <button type="button" class="flat-btn is-primary" id="panel-google-btn">Sign in with Google</button>
+                <button type="button" class="text-link" id="continue-local-btn">Continue locally</button>
+            </div>
+            <div class="status-note" id="auth-status"></div>
+        </section>
+
+        <!-- SCREEN 1: SUBJECTS HOME -->
+        <main id="view-home" class="view is-active">
+            <div class="home-title-row">
+                <h1 class="home-page-title">Fifth year</h1>
+                <div class="home-search-wrap">
+                    <label class="sr-only" for="home-search-input">Search subjects</label>
+                    <input type="search" id="home-search-input" class="flat-input" placeholder="Search subjects">
+                </div>
+            </div>
+
+            <section class="roast-banner" aria-label="Daily notice">
+                <div class="roast-top">
+                    <p class="roast-message" id="roast-message"></p>
+                    <button type="button" class="roast-next-btn" id="roast-next-btn" aria-label="Next Roast">
+                        <svg class="roast-next-icon" viewBox="0 0 24 24" aria-hidden="true">
+                            <path d="M21 12a9 9 0 1 1-2.64-6.36"></path>
+                            <path d="M21 3v6h-6"></path>
+                        </svg>
+                        <span>Next Roast</span>
+                    </button>
+                </div>
+
+                <div class="roast-badge">
+                    <span class="roast-badge-label">Time left before we triple our prices for finals:</span>
+                    <div class="roast-badge-line">
+                        <strong class="roast-never">NEVER.</strong>
+                        <span class="roast-relax">(Relax, it's 100% free forever).</span>
+                    </div>
+                </div>
+
+                <div class="roast-vip-row">
+                    <button type="button" class="roast-vip-btn" id="roast-vip-btn">Upgrade to VIP ($99/Exam)</button>
+                </div>
+            </section>
+
+            <section class="unfinished-strip" id="unfinished-strip" style="display: none;">
+                <div id="unfinished-list"></div>
+            </section>
+
+            <div class="subjects-table" id="subject-table"></div>
+            <p class="status-note" id="home-status"></p>
+        </main>
+
+        <!-- SCREEN 2: SESSION SETUP -->
+        <section id="view-setup" class="view">
+            <div class="setup-top-row">
+                <div>
+                    <button type="button" class="text-link" id="setup-back-btn">
+                        <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6"></path></svg>
+                        <span>Subjects</span>
+                    </button>
+                    <h1 class="setup-title" id="setup-subject-title">Subject</h1>
+                </div>
+                <div class="setup-type-switch" id="setup-type-switch" role="tablist" aria-label="Exam section"></div>
+            </div>
+
+            <div class="setup-layout">
+                <div>
+                    <div class="lessons-toolbar">
+                        <div style="flex: 1; min-width: 200px; max-width: 280px;">
+                            <label class="sr-only" for="lesson-search-input">Search lessons</label>
+                            <input type="search" id="lesson-search-input" class="flat-input" placeholder="Search lessons">
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 16px;">
+                            <span class="status-note tabular" id="lessons-selected-count" style="margin-top: 0;">0 selected</span>
+                            <button type="button" class="text-link is-accent" id="lessons-select-all-btn">Clear all</button>
+                        </div>
+                    </div>
+                    <div class="lessons-plain-list" id="lessons-list"></div>
+                </div>
+
+                <aside class="setup-summary-panel" aria-label="Session settings">
+                    <div id="presets-container" style="display: none;">
+                        <span class="control-group-label">Saved presets</span>
+                        <div class="seg-row" id="presets-list"></div>
+                    </div>
+
+                    <div>
+                        <span class="control-group-label">Source</span>
+                        <div class="seg-track" id="setup-source-group">
+                            <button type="button" class="seg-btn is-active" data-val="unsolved">Unsolved</button>
+                            <button type="button" class="seg-btn" data-val="mistakes">Mistakes</button>
+                            <button type="button" class="seg-btn" data-val="favorites">Favorites</button>
+                            <button type="button" class="seg-btn" data-val="all">All</button>
+                        </div>
+                    </div>
+
+                    <div>
+                        <span class="control-group-label">Count</span>
+                        <div class="seg-track" id="setup-count-group">
+                            <button type="button" class="seg-btn" data-val="5">5</button>
+                            <button type="button" class="seg-btn is-active" data-val="10">10</button>
+                            <button type="button" class="seg-btn" data-val="20">20</button>
+                            <button type="button" class="seg-btn" data-val="50">50</button>
+                            <button type="button" class="seg-btn" data-val="custom">Custom</button>
+                            <button type="button" class="seg-btn" data-val="all">All</button>
+                        </div>
+                        <div id="setup-custom-count-wrap" class="custom-count-row" style="display: none;">
+                            <input type="number" id="setup-custom-count-input" class="flat-input tabular" min="1" max="500" value="15" style="width: 96px;">
+                            <span class="status-note tabular" id="setup-custom-max-label" style="margin-top: 0;"></span>
+                        </div>
+                    </div>
+
+                    <div>
+                        <span class="control-group-label">Order</span>
+                        <div class="seg-track" id="setup-order-group">
+                            <button type="button" class="seg-btn is-active" data-val="random">Random</button>
+                            <button type="button" class="seg-btn" data-val="sequential">Sequential</button>
+                            <button type="button" class="seg-btn" data-val="hardest">Hardest first</button>
+                        </div>
+                    </div>
+
+                    <div>
+                        <span class="control-group-label">Mode</span>
+                        <div class="seg-track" id="setup-mode-group">
+                            <button type="button" class="seg-btn is-active" data-val="learning">Learning</button>
+                            <button type="button" class="seg-btn" data-val="exam">Exam</button>
+                        </div>
+                    </div>
+
+                    <div>
+                        <span class="control-group-label">Timer</span>
+                        <div class="seg-track" id="setup-timer-group">
+                            <button type="button" class="seg-btn is-active" data-val="off">Off</button>
+                            <button type="button" class="seg-btn" data-val="per_question">Per question</button>
+                            <button type="button" class="seg-btn" data-val="session">Whole</button>
+                        </div>
+                        <div id="setup-timer-value-wrap" style="display: none; margin-top: 8px;">
+                            <label class="field-label" for="setup-timer-input" id="setup-timer-label">Seconds per question</label>
+                            <input type="number" id="setup-timer-input" class="flat-input tabular" min="5" max="360" value="60">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="inline-check">
+                            <input type="checkbox" id="setup-shuffle-options">
+                            <span>Shuffle answer options</span>
+                        </label>
+                    </div>
+
+                    <div class="setup-meta-footer">
+                        <p class="summary-oneline tabular" id="setup-oneline-summary">Select at least one lesson.</p>
+                        <div class="preset-row">
+                            <button type="button" class="text-link is-accent" id="save-preset-btn" style="min-height: 36px;">Save preset</button>
+                            <span class="status-note" id="preset-status" style="margin-top: 0;"></span>
+                        </div>
+                    </div>
+
+                    <div class="setup-start-wrap">
+                        <button type="button" class="setup-start-btn" id="start-session-btn" disabled>Start session</button>
+                    </div>
+                </aside>
+            </div>
+        </section>
+
+        <!-- SCREEN 3: QUESTION -->
+        <section id="view-question" class="view">
+            <div class="question-topbar-wrap">
+                <div class="question-topbar">
+                    <span class="q-top-left" id="q-subject-label">Subject</span>
+                    <div class="q-top-center tabular">
+                        <span id="q-counter">1 / 1</span>
+                        <span class="topbar-subject" id="q-timer-display" style="display: none; margin-inline-start: 10px;">00:00</span>
+                    </div>
+                    <div class="q-top-right">
+                        <button type="button" class="text-link q-top-action" id="q-fullscreen-btn" aria-label="Enter full screen" title="Enter full screen">
+                            <svg class="q-icon" id="q-fs-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"></path></svg>
+                        </button>
+                        <button type="button" class="text-link q-top-action" id="q-map-toggle-btn" aria-label="Map">
+                            <svg class="q-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"></rect><rect x="14" y="3" width="7" height="7" rx="1"></rect><rect x="3" y="14" width="7" height="7" rx="1"></rect><rect x="14" y="14" width="7" height="7" rx="1"></rect></svg>
+                            <span class="q-top-btn-label">Map</span>
+                        </button>
+                        <button type="button" class="text-link q-top-action" id="q-pause-btn" aria-label="Pause">
+                            <svg class="q-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5v14M15 5v14"></path></svg>
+                            <span class="q-top-btn-label">Pause</span>
+                        </button>
+                        <button type="button" class="text-link q-top-action" id="q-finish-btn" aria-label="Finish">
+                            <svg class="q-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 13l4 4L19 7"></path></svg>
+                            <span class="q-top-btn-label">Finish</span>
+                        </button>
+                    </div>
+                </div>
+                <div class="q-progress-track">
+                    <div class="q-progress-fill" id="q-progress-fill"></div>
+                </div>
+            </div>
+            <div class="q-fs-msg" id="q-fs-msg" role="status" aria-live="polite" style="display: none;"></div>
+
+            <div class="question-desk">
+                <div class="qmap-drawer" id="qmap-drawer">
+                    <div class="qmap-grid" id="qmap-grid"></div>
+                </div>
+
+                <article class="question-card">
+                    <span class="sr-only" id="q-answer-live" aria-live="polite"></span>
+                    <div id="question-fade" class="fade-target">
+                        <div class="question-meta-row">
+                            <span id="q-lesson-label"></span>
+                            <span class="tabular" id="q-mode-badge">Learning</span>
+                        </div>
+
+                        <h2 class="question-stem" id="q-stem"></h2>
+                        <div class="question-media" id="q-media" style="display: none;">
+                            <img id="q-img" src="" alt="Question figure">
+                        </div>
+
+                        <ul class="options-list" id="q-options-list"></ul>
+
+                        <div class="tools-row">
+                            <button type="button" class="text-link" id="tool-fav-btn">
+                                <svg class="q-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 4h12v16l-6-4-6 4V4z"></path></svg>
+                                <span id="tool-fav-label">Favorite</span>
+                            </button>
+                            <button type="button" class="text-link" id="tool-note-btn">
+                                <svg class="q-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4l10-10-4-4L4 16v4zM13 7l4 4"></path></svg>
+                                <span id="tool-note-label">Note</span>
+                            </button>
+                            <button type="button" class="text-link" id="tool-report-btn">
+                                <svg class="q-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4v16M5 5h11l-2 4 2 4H5"></path></svg>
+                                <span>Report</span>
+                            </button>
+                        </div>
+
+                        <div class="inline-drawer" id="note-drawer">
+                            <label class="field-label" for="note-input">Personal note</label>
+                            <textarea id="note-input" class="flat-textarea" rows="3" placeholder="Write a note for this question"></textarea>
+                            <div style="display: flex; align-items: center; gap: 16px; margin-top: 8px;">
+                                <button type="button" class="flat-btn" id="save-note-btn">Save note</button>
+                                <button type="button" class="text-link" id="close-note-btn">Close</button>
+                                <span class="status-note" id="note-status" style="margin-top: 0;"></span>
+                            </div>
+                        </div>
+
+                        <div class="inline-drawer" id="report-drawer">
+                            <label class="field-label" for="report-input">Report an error</label>
+                            <textarea id="report-input" class="flat-textarea" rows="3" placeholder="Describe the issue or correction"></textarea>
+                            <div style="display: flex; align-items: center; gap: 16px; margin-top: 8px;">
+                                <button type="button" class="flat-btn" id="send-report-btn">Send report</button>
+                                <button type="button" class="text-link" id="close-report-btn">Close</button>
+                                <span class="status-note" id="report-status" style="margin-top: 0;"></span>
+                            </div>
+                        </div>
+
+                        <div class="explanation-block" id="q-explanation-block">
+                            <span class="explanation-label">Explanation</span>
+                            <div id="q-explanation-text"></div>
+                        </div>
+
+                        <div class="question-card-divider"></div>
+
+                        <div class="question-card-nav">
+                            <button type="button" class="q-prev-btn" id="q-prev-btn">
+                                <svg class="q-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6"></path></svg>
+                                <span>Previous</span>
+                            </button>
+                            <button type="button" class="q-next-btn" id="q-next-btn">
+                                <span id="q-next-label">Next</span>
+                                <svg class="q-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"></path></svg>
+                            </button>
+                        </div>
+                    </div>
+                </article>
+            </div>
+        </section>
+
+        <!-- SCREEN 4: RESULTS + REVIEW -->
+        <section id="view-results" class="view">
+            <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 16px; flex-wrap: wrap;">
+                <div>
+                    <h1 class="setup-title" id="res-title">Session complete</h1>
+                    <p class="home-sub" id="res-subtitle"></p>
+                </div>
+                <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+                    <button type="button" class="flat-btn is-primary" id="res-retry-mistakes-btn" style="display: none;">Retry mistakes only</button>
+                    <button type="button" class="flat-btn" id="res-same-settings-btn">Same settings again</button>
+                    <button type="button" class="text-link" id="res-home-btn">Subjects</button>
+                </div>
+            </div>
+
+            <div class="results-stats-row tabular" id="res-stats-row"></div>
+
+            <div class="home-controls" style="margin-top: 24px; margin-bottom: 12px;">
+                <h2 class="section-heading-sm" style="margin: 0;">Question review</h2>
+                <div class="filter-tabs" id="res-filter-tabs">
+                    <button type="button" class="filter-chip is-active" data-rfilter="all">All</button>
+                    <button type="button" class="filter-chip" data-rfilter="wrong">Incorrect</button>
+                    <button type="button" class="filter-chip" data-rfilter="correct">Correct</button>
+                    <button type="button" class="filter-chip" data-rfilter="skipped">Skipped</button>
+                </div>
+            </div>
+            <div class="review-list" id="res-review-list"></div>
+        </section>
+
+        <!-- SCREEN 5A: HISTORY -->
+        <section id="view-history" class="view">
+            <div class="home-controls">
+                <h1 class="setup-title" style="margin: 0;">Session history</h1>
+                <button type="button" class="text-link" id="clear-history-btn">Clear history</button>
+            </div>
+            <div class="stack-list" id="history-list"></div>
+            <p class="status-note" id="history-empty"></p>
+        </section>
+
+        <!-- SCREEN 5B: FAVORITES & NOTES -->
+        <section id="view-favorites" class="view">
+            <div class="home-controls">
+                <h1 class="setup-title" style="margin: 0;">Favorites &amp; notes</h1>
+                <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+                    <input type="search" id="fav-search-input" class="flat-input" placeholder="Search saved items" style="width: 220px;">
+                    <select id="fav-subject-filter" class="flat-select" style="width: 200px;">
+                        <option value="all">All subjects</option>
+                    </select>
+                </div>
+            </div>
+            <div class="stack-list" id="favorites-list"></div>
+            <p class="status-note" id="favorites-empty"></p>
+        </section>
+
+        <!-- SCREEN 5C: MISTAKES BY SUBJECT -->
+        <section id="view-mistakes" class="view">
+            <div class="home-controls">
+                <h1 class="setup-title" style="margin: 0;">Mistakes by subject</h1>
+            </div>
+            <div class="stack-list" id="mistakes-list"></div>
+            <p class="status-note" id="mistakes-empty"></p>
+        </section>
+
+        <!-- SCREEN 5D: PERSONAL STATS -->
+        <section id="view-stats" class="view">
+            <div class="home-controls">
+                <h1 class="setup-title" style="margin: 0;">Personal statistics</h1>
+            </div>
+            <div class="results-stats-row tabular" id="stats-summary-row"></div>
+            <h2 class="section-heading-sm" style="margin-top: 24px;">Progress by subject</h2>
+            <div class="stack-list" id="stats-subject-list"></div>
+        </section>
+    </div>
+
+    <div id="roast-toast" class="roast-toast" role="status" aria-live="polite" hidden></div>
+
+    <script type="module" src="app.js"></script>
+    <script type="module" src="roast.js"></script>
+</body>
+</html>

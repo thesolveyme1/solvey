@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Uploader — solvey-4cc26</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400;6..72,500&family=Source+Sans+3:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <script>
+        (function () {
+            try {
+                if (localStorage.getItem("thegreatasm_theme") === "night") {
+                    document.documentElement.setAttribute("data-theme", "night");
+                }
+            } catch (_) {}
+        })();
+    </script>
+</head>
+<body>
+    <div class="page-shell">
+        <header class="topbar">
+            <div>
+                <span class="topbar-title">Question Uploader</span>
+                <span class="topbar-subject" style="margin-inline-start: 10px;">solvey-4cc26</span>
+            </div>
+            <div class="topbar-actions">
+                <button type="button" class="text-link" id="up-theme-btn">Night</button>
+                <a href="index.html" class="text-link">Reading Room</a>
+                <button type="button" class="text-link is-accent" id="up-signin-btn">Sign in with Google</button>
+                <span class="text-link" id="up-user-label" style="display: none; cursor: default;"></span>
+                <button type="button" class="text-link" id="up-signout-btn" style="display: none;">Sign out</button>
+            </div>
+        </header>
+
+        <section class="quiet-panel" id="up-setup-panel" style="display: none;">
+            <h2>Connect Firebase project: solvey-4cc26</h2>
+            <p>
+                Paste the Web App config snippet from
+                <a href="https://console.firebase.google.com/u/2/project/solvey-4cc26/settings/general" target="_blank" rel="noopener">Firebase Console</a>
+                before uploading modules.
+            </p>
+            <div class="field-grid">
+                <div>
+                    <label class="field-label" for="up-cfg-input">firebaseConfig snippet</label>
+                    <textarea id="up-cfg-input" class="flat-textarea" rows="4" placeholder='apiKey: "...", authDomain: "solvey-4cc26.firebaseapp.com", projectId: "solvey-4cc26", appId: "..."'></textarea>
+                </div>
+            </div>
+            <button type="button" class="flat-btn is-primary" id="up-save-cfg-btn">Save configuration</button>
+            <div class="status-note" id="up-cfg-status"></div>
+        </section>
+
+        <div class="home-intro">
+            <h1 class="home-heading">Fifth Year Modules</h1>
+            <p class="home-sub">Upload local question files to Firestore (content collection) and sync open sessions.</p>
+        </div>
+
+        <div style="display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; padding: 14px 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); margin-bottom: 12px;">
+            <div style="display: flex; align-items: center; gap: 14px; flex-wrap: wrap;">
+                <button type="button" class="flat-btn is-primary" id="up-all-btn" disabled>Upload all 22 modules</button>
+                <button type="button" class="flat-btn" id="up-refresh-btn" disabled>Check Firestore status</button>
+            </div>
+            <span class="status-note" id="up-global-status" style="margin-top: 0;">Loading local files...</span>
+        </div>
+
+        <div id="up-modules-container"></div>
+
+        <details style="margin-top: 36px; border-top: 1px solid var(--line); padding-top: 16px;">
+            <summary class="text-link" style="cursor: pointer;">Firestore rules and setup notes for solvey-4cc26</summary>
+            <p class="status-note" style="margin-top: 10px;">
+                1. In Firebase Console under Authentication, enable the Google sign-in provider and add your local or hosted domain to Authorized domains.<br>
+                2. In Firestore Database Rules, replace my_admin@gmail.com with your Google email or use authenticated rules below:
+            </p>
+            <pre class="code-block">rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /content/{docId} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+    match /users/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+    match /reports/{reportId} {
+      allow create: if request.auth != null;
+      allow read: if request.auth != null;
+    }
+  }
+}</pre>
+        </details>
+    </div>
+
+    <script type="module" src="uploader.js"></script>
+</body>
+</html>

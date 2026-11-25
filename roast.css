@@ -1,0 +1,201 @@
+/* Hero Roast Banner — inherits 4 themes from styles.css variables */
+
+:root,
+[data-theme="charcoal"],
+[data-theme="black"],
+[data-theme="navy"] {
+    --roast-gold: #f5c542;
+}
+
+[data-theme="light"] {
+    --roast-gold: #8a5a00;
+}
+
+.roast-banner {
+    background-color: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    box-shadow: var(--shadow);
+    padding: 18px 20px;
+    margin-bottom: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.roast-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.roast-message {
+    margin: 0;
+    flex: 1;
+    min-width: 0;
+    font-size: clamp(19px, 2.4vw, 24px);
+    line-height: 1.45;
+    font-weight: 500;
+    color: var(--text);
+    overflow-wrap: anywhere;
+}
+
+.roast-gold {
+    color: var(--roast-gold);
+    font-weight: 700;
+}
+
+.roast-next-btn {
+    min-height: 44px;
+    padding: 0 14px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background-color: var(--option);
+    color: var(--muted);
+    font-size: 13.5px;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    flex-shrink: 0;
+    white-space: nowrap;
+}
+
+.roast-next-btn:hover {
+    border-color: var(--muted);
+    color: var(--text);
+}
+
+.roast-next-icon {
+    width: 15px;
+    height: 15px;
+    stroke: currentColor;
+    stroke-width: 2;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    flex-shrink: 0;
+}
+
+.roast-badge {
+    border: 1px dashed var(--border);
+    border-radius: 12px;
+    background-color: var(--option);
+    padding: 14px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.roast-badge-label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--muted);
+}
+
+.roast-badge-line {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.roast-never {
+    font-size: 20px;
+    font-weight: 800;
+    color: var(--text);
+    letter-spacing: 0.01em;
+}
+
+.roast-relax {
+    font-size: 13.5px;
+    font-weight: 600;
+    color: var(--correct-text);
+}
+
+.roast-vip-row {
+    display: flex;
+    align-items: center;
+}
+
+.roast-vip-btn {
+    min-height: 44px;
+    padding: 0 18px;
+    border: 1.5px solid var(--accent);
+    border-radius: 10px;
+    background-color: transparent;
+    color: var(--accent);
+    font-size: 14.5px;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.roast-vip-btn:hover {
+    background-color: var(--selected-bg);
+}
+
+/* Toast notification */
+@keyframes roastToastIn {
+    from {
+        opacity: 0;
+        transform: translate(-50%, 8px);
+    }
+    to {
+        opacity: 1;
+        transform: translate(-50%, 0);
+    }
+}
+
+.roast-toast {
+    position: fixed;
+    left: 50%;
+    bottom: calc(20px + env(safe-area-inset-bottom));
+    transform: translateX(-50%);
+    max-width: 92vw;
+    width: max-content;
+    padding: 12px 16px;
+    border: 1px solid var(--accent);
+    border-radius: 10px;
+    background-color: var(--card);
+    color: var(--text);
+    box-shadow: var(--shadow);
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 1.45;
+    text-align: center;
+    cursor: pointer;
+    z-index: 60;
+    animation: roastToastIn 160ms ease-out;
+}
+
+.roast-toast[hidden] {
+    display: none;
+}
+
+@media (max-width: 640px) {
+    .roast-banner {
+        padding: 16px;
+    }
+
+    .roast-top {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 12px;
+    }
+
+    .roast-next-btn {
+        align-self: flex-start;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .roast-toast {
+        animation: none !important;
+        transition: none !important;
+    }
+}
